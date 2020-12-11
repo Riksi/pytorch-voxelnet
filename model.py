@@ -4,6 +4,60 @@ from blocks import RPN, ConvMiddleLayer, VFE_Block
 from model_helper.loss_optimizer_helper import Loss, Optimizer
 
 
+def validate_step(model,
+                  feature_buffer,
+                  coordinate_buffer,
+                  targets,
+                  pos_equal_one,
+                  pos_equal_one_reg,
+                  pos_equal_one_sum,
+                  neg_equal_one,
+                  neg_equal_one_sum):
+
+    p_map, r_map = model(feature_buffer=feature_buffer,
+                         coordinate_buffer=coordinate_buffer)
+    loss = model.loss(r_map, p_map,
+                      targets,
+                      pos_equal_one,
+                      pos_equal_one_reg,
+                      pos_equal_one_sum,
+                      neg_equal_one,
+                      neg_equal_one_sum)
+
+    return loss
+
+
+def train_step(model,
+               optimizer,
+               feature_buffer,
+               coordinate_buffer,
+               targets,
+               pos_equal_one,
+               pos_equal_one_reg,
+               pos_equal_one_sum,
+               neg_equal_one,
+               neg_equal_one_sum):
+
+    optimizer.optimizer.zero_grad()
+    p_map, r_map = model(feature_buffer=feature_buffer,
+                         coordinate_buffer=coordinate_buffer)
+    loss = model.loss(r_map, p_map,
+                      targets,
+                      pos_equal_one,
+                      pos_equal_one_reg,
+                      pos_equal_one_sum,
+                      neg_equal_one,
+                      neg_equal_one_sum)
+
+    loss.total.backward()
+    nn.utils.clip_grad_norm_(model.parameters(),
+                             model.params["max_gradient_norm"])
+
+    optimizer.optimizer.step()
+    optimizer.scheduler.step()
+    return loss
+
+
 class Model(nn.Module):
     def __init__(self, cfg, params, strategy, *args, **kwargs):
         super(Model, self).__init__()
@@ -27,9 +81,9 @@ class Model(nn.Module):
 
         self.loss = Loss(self.parameters())
 
-    def call(self, batch, *args, **kwargs):
+    def forward(self, batch, *args, **kwargs):
         if batch is None:
-            if not ("" in kwargs
+            if not ("coordinate_buffer" in kwargs
                  and "feature_buffer" in kwargs):
                 raise ValueError("You must provide a `batch` object or a dict with keys"
                                  "`coordinate_buffer` and `feature_buffer` corresponding"
@@ -46,6 +100,11 @@ class Model(nn.Module):
         output = self.conv_middle(output)
         prob_map, reg_map = self.rpn(output)
         return prob_map, reg_map
+
+
+
+
+
 
 
 

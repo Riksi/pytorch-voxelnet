@@ -70,6 +70,8 @@ class Optimizer:
         boundaries = [80, 120]
         self.lr_cst = params["learning_rate"]
         self.optimizer = torch.optim.Adam(model.parameters(), lr=self.lr_cst)
-        self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer,
-                                                       milestones=boundaries)
+        self.scheduler = torch.optim.lr_scheduler.MultiStepLR(
+            self.optimizer,
+            milestones=boundaries
+        )
 

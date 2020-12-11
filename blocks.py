@@ -70,7 +70,7 @@ class VFE_Block(nn.Module):
             nn.ReLU()
         )
 
-    def __call_(self, inputs, voxel_coor_buffer, shape):
+    def forward(self, inputs, voxel_coor_buffer, shape):
         """
         TODO: K?, T?
         :param inputs: Tensor [batch_size=B, out_dim=F, max_num_voxels=V, max_num_points=P]
@@ -126,7 +126,7 @@ class ConvMiddleLayer(nn.Module):
 
         self.relu1, self.relu2, self.relu3 = [torch.nn.ReLU() for _ in range(3)]
 
-    def __call__(self, inputs):
+    def forward(self, inputs):
         """
         :param inputs: Tensor [batch_size=B, channels=C, depth=D, height=H, width=W]
         :return:
@@ -206,7 +206,7 @@ class RPN(nn.Module):
         x = getattr(x, f'deconv_bn{idx}')(x)
         return nn.functional.relu(x)
 
-    def __call__(self, x):
+    def forward(self, x):
         # TODO: add assertion about shape
 
         deconvs = []
